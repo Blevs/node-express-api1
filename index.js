@@ -20,22 +20,23 @@ server.post('/api/users', (req, res) => {
   const { name, bio } = req.body;
   if (!name || !bio) {
     res.status(400).json({error: "Requires name and bio"});
+  } else {
+    db.insert({ name, bio })
+      .then(({ id }) => {
+        db.findById(id)
+          .then(user => {
+            res.status(201).json(user);
+          })
+          .catch(err => {
+            console.log(err);
+            res.status(500).json({error: "server error retrieving user"});
+          });
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json({error: "server error inserting user"});
+      });
   }
-  db.insert({ name, bio })
-    .then(({ id }) => {
-      db.findById(id)
-        .then(user => {
-          res.status(201).json(user);
-        })
-        .catch(err => {
-          console.log(err);
-          res.status(500).json({error: "server error retrieving user"});
-        });
-    })
-    .catch(err => {
-      console.log(err);
-      res.status(500).json({error: "server error inserting user"});
-    });
 });
 
 server.get('/api/users/:id', (req, res) => {
@@ -76,7 +77,8 @@ server.put('/api/users/:id', (req, res) => {
   const { id } = req.params;
   const { name, bio } = req.body;
   if (!name && !bio) {
-    res.status(400).json({error: 'Requires some changes'});
+    // can use a return to shortcut the funciton instead of an else
+    return res.status(400).json({error: 'Requires some changes'});
   }
   db.update(id, { name, bio })
     .then(updated => {
